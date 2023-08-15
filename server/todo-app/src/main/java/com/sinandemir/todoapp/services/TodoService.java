@@ -43,4 +43,35 @@ public class TodoService {
                 .collect(Collectors.toList());
         return mappedTodos;
     }
+
+    public TodoResponse updateTodo(TodoRequest todoRequest, Long todoId) {
+        Todo todo = todoRepos.findById(todoId)
+                .orElseThrow(() -> new ResourceNotFoundException("todo not found with id -> " + todoId));
+        todo.setTitle(todoRequest.getTitle());
+        todo.setDescription(todoRequest.getDescription());
+        todo.setCompleted(todoRequest.isCompleted());
+
+        Todo savedTodo = todoRepos.save(todo);
+
+        TodoResponse mappedTodo = modelMapper.map(savedTodo, TodoResponse.class);
+        return mappedTodo;
+    }
+
+    public void deleteTodo(Long todoId) {
+        Todo todo = todoRepos.findById(todoId)
+                .orElseThrow(() -> new ResourceNotFoundException("todo not found with id -> " + todoId));
+
+        todoRepos.deleteById(todo.getId());
+    }
+
+    public TodoResponse changeCompletedStatus(Long todoId) {
+        Todo todo = todoRepos.findById(todoId)
+                .orElseThrow(() -> new ResourceNotFoundException("todo not found with id -> " + todoId));
+        todo.setCompleted(!todo.isCompleted());
+
+        Todo savedTodo = todoRepos.save(todo);
+        TodoResponse mappedTodo = modelMapper.map(savedTodo, TodoResponse.class);
+
+        return mappedTodo;
+    }
 }
