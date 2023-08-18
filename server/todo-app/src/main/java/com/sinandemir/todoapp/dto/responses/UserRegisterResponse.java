@@ -5,13 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TodoResponse {
+@Getter
+@Setter
+public class UserRegisterResponse {
     private Long id;
-    private String title;
-    private String description;
-    private boolean completed;
+    private String name;
+    private String username;
+    private String email;
 }

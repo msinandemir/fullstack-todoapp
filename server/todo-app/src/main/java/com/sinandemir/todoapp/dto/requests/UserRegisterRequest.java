@@ -9,8 +9,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TodoRequest {
-    private String title;
-    private String description;
-    private boolean completed;
+public class UserRegisterRequest {
+    private String name;
+    private String username;
+    private String email;
+    private String password;
 }

@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TodoResponse {
-    private Long id;
-    private String title;
-    private String description;
-    private boolean completed;
+public class UserLoginResponse {
+    private String accessToken;
+    private String tokenType = "Bearer";
+    private Long userId;
+    private String role;
 }

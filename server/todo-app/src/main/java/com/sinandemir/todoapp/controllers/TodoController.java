@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -28,36 +29,42 @@ public class TodoController {
         this.todoService = todoService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<TodoResponse> addTodo(@RequestBody TodoRequest todoRequest) {
         TodoResponse savedTodo = todoService.addTodo(todoRequest);
         return new ResponseEntity<TodoResponse>(savedTodo, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("{todoId}")
     public ResponseEntity<TodoResponse> getTodoById(@PathVariable Long todoId) {
         TodoResponse todo = todoService.getTodo(todoId);
         return new ResponseEntity<TodoResponse>(todo, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping
     public ResponseEntity<List<TodoResponse>> getAllTodos() {
         List<TodoResponse> todos = todoService.getAllTodos();
         return new ResponseEntity<List<TodoResponse>>(todos, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("{todoId}")
     public ResponseEntity<TodoResponse> updateTodo(@RequestBody TodoRequest todoRequest, @PathVariable Long todoId) {
         TodoResponse todo = todoService.updateTodo(todoRequest, todoId);
         return new ResponseEntity<TodoResponse>(todo, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("{todoId}")
     public ResponseEntity<String> deleteTodo(@PathVariable Long todoId){
         todoService.deleteTodo(todoId);
         return new ResponseEntity<String>("todo deleted successfully.",HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PatchMapping("{todoId}")
     public ResponseEntity<TodoResponse> changeCompletedStatus(@PathVariable Long todoId){
         TodoResponse todo = todoService.changeCompletedStatus(todoId);
