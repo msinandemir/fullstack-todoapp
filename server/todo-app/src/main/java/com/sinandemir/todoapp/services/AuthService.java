@@ -17,6 +17,7 @@ import com.sinandemir.todoapp.dto.requests.UserLoginRequest;
 import com.sinandemir.todoapp.dto.requests.UserRegisterRequest;
 import com.sinandemir.todoapp.dto.responses.UserLoginResponse;
 import com.sinandemir.todoapp.dto.responses.UserRegisterResponse;
+import com.sinandemir.todoapp.entities.RefreshToken;
 import com.sinandemir.todoapp.entities.Role;
 import com.sinandemir.todoapp.entities.User;
 import com.sinandemir.todoapp.exceptions.TodoGlobalException;
@@ -33,15 +34,18 @@ public class AuthService {
     private ModelMapper modelMapper;
     private AuthenticationManager authenticationManager;
     private JwtTokenProvider jwtTokenProvider;
+    private RefreshTokenService refreshTokenService;
 
     public AuthService(UserRepository userRepos, RoleRepository roleRepos, PasswordEncoder passwordEncoder,
-            ModelMapper modelMapper, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider) {
+            ModelMapper modelMapper, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider,
+            RefreshTokenService refreshTokenService) {
         this.userRepos = userRepos;
         this.roleRepos = roleRepos;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public UserRegisterResponse register(UserRegisterRequest registerRequest) {
@@ -77,18 +81,27 @@ public class AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(loginRequest.getUsernameOrEmail());
 
         Optional<User> userOptional = userRepos.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(),
                 loginRequest.getUsernameOrEmail());
 
         String role = null;
         Long userId = null;
+        UserLoginResponse loginResponse = new UserLoginResponse();
 
         if (userOptional.isPresent()) {
             User loggedInUser = userOptional.get();
             userId = loggedInUser.getId();
+            RefreshToken refreshToken = refreshTokenService.getRefreshTokenByUserId(userId);
             Optional<Role> roleOptional = loggedInUser.getRoles().stream().findFirst();
+
+            if (refreshToken != null) {
+                loginResponse.setRefreshToken(refreshToken.getRefreshToken());
+            } else {
+                refreshToken = refreshTokenService.generateRefreshToken(userId);
+                loginResponse.setRefreshToken(refreshToken.getRefreshToken());
+            }
 
             if (roleOptional.isPresent()) {
                 Role userRole = roleOptional.get();
@@ -96,10 +109,19 @@ public class AuthService {
             }
         }
 
-        UserLoginResponse loginResponse = new UserLoginResponse();
         loginResponse.setAccessToken(token);
         loginResponse.setRole(role);
         loginResponse.setUserId(userId);
         return loginResponse;
+    }
+
+    public String refreshAccessToken(String refreshToken) {
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+        Optional<User> user = userRepos.findById(userId);
+        if (jwtTokenProvider.validateToken(refreshToken)) {
+            String newJwtToken = jwtTokenProvider.generateToken(user.get().getUsername());
+            return newJwtToken;
+        }
+        return null;
     }
 }

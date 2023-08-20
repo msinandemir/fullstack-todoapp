@@ -1,4 +1,4 @@
-package com.sinandemir.todoapp.dto.responses;
+package com.sinandemir.todoapp.dto.requests;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,10 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserLoginResponse {
-    private String accessToken;
+public class RefreshTokenRequest {
     private String refreshToken;
-    private String tokenType = "Bearer";
-    private Long userId;
-    private String role;
 }
