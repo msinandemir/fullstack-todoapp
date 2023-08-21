@@ -21,26 +21,24 @@ import com.sinandemir.todoapp.entities.RefreshToken;
 import com.sinandemir.todoapp.entities.Role;
 import com.sinandemir.todoapp.entities.User;
 import com.sinandemir.todoapp.exceptions.TodoGlobalException;
-import com.sinandemir.todoapp.repositories.RoleRepository;
-import com.sinandemir.todoapp.repositories.UserRepository;
 import com.sinandemir.todoapp.security.JwtTokenProvider;
 
 @Service
 public class AuthService {
 
-    private UserRepository userRepos;
-    private RoleRepository roleRepos;
+    private UserService userService;
+    private RoleService roleService;
     private PasswordEncoder passwordEncoder;
     private ModelMapper modelMapper;
     private AuthenticationManager authenticationManager;
     private JwtTokenProvider jwtTokenProvider;
     private RefreshTokenService refreshTokenService;
 
-    public AuthService(UserRepository userRepos, RoleRepository roleRepos, PasswordEncoder passwordEncoder,
+    public AuthService(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder,
             ModelMapper modelMapper, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider,
             RefreshTokenService refreshTokenService) {
-        this.userRepos = userRepos;
-        this.roleRepos = roleRepos;
+        this.userService = userService;
+        this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
         this.authenticationManager = authenticationManager;
@@ -50,11 +48,11 @@ public class AuthService {
 
     public UserRegisterResponse register(UserRegisterRequest registerRequest) {
 
-        if (userRepos.existsByUsername(registerRequest.getUsername())) {
+        if (userService.existsByUsername(registerRequest.getUsername())) {
             throw new TodoGlobalException(HttpStatus.BAD_REQUEST, "username is already exist!");
         }
 
-        if (userRepos.existsByEmail(registerRequest.getEmail())) {
+        if (userService.existsByEmail(registerRequest.getEmail())) {
             throw new TodoGlobalException(HttpStatus.BAD_REQUEST, "email is already exist!");
         }
 
@@ -65,12 +63,12 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         Set<Role> roles = new HashSet<>();
-        Role userRole = roleRepos.findByName("ROLE_USER");
+        Role userRole = roleService.findByName("ROLE_USER");
         roles.add(userRole);
 
         user.setRoles(roles);
 
-        User savedUser = userRepos.save(user);
+        User savedUser = userService.save(user);
         UserRegisterResponse mappedUser = modelMapper.map(savedUser, UserRegisterResponse.class);
         return mappedUser;
     }
@@ -83,7 +81,7 @@ public class AuthService {
 
         String token = jwtTokenProvider.generateToken(loginRequest.getUsernameOrEmail());
 
-        Optional<User> userOptional = userRepos.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(),
+        Optional<User> userOptional = userService.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(),
                 loginRequest.getUsernameOrEmail());
 
         String role = null;
@@ -117,7 +115,7 @@ public class AuthService {
 
     public String refreshAccessToken(String refreshToken) {
         Long userId = jwtTokenProvider.getUserId(refreshToken);
-        Optional<User> user = userRepos.findById(userId);
+        Optional<User> user = userService.findById(userId);
         if (jwtTokenProvider.validateToken(refreshToken)) {
             String newJwtToken = jwtTokenProvider.generateToken(user.get().getUsername());
             return newJwtToken;

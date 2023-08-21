@@ -11,21 +11,21 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.sinandemir.todoapp.entities.User;
-import com.sinandemir.todoapp.repositories.UserRepository;
+import com.sinandemir.todoapp.services.UserService;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private UserRepository userRepos;
+    private UserService userService;
 
-    public CustomUserDetailsService(UserRepository userRepos) {
-        this.userRepos = userRepos;
+    public CustomUserDetailsService(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
 
-        User user = userRepos.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+        User user = userService.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("user not exist by username or email."));
 
         Set<GrantedAuthority> authorities = user.getRoles().stream()

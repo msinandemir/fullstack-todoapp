@@ -7,24 +7,23 @@ import org.springframework.stereotype.Service;
 import com.sinandemir.todoapp.entities.RefreshToken;
 import com.sinandemir.todoapp.entities.User;
 import com.sinandemir.todoapp.repositories.RefreshTokenRepository;
-import com.sinandemir.todoapp.repositories.UserRepository;
 import com.sinandemir.todoapp.security.JwtTokenProvider;
 
 @Service
 public class RefreshTokenService {
     private RefreshTokenRepository refreshTokenRepos;
     private JwtTokenProvider tokenProvider;
-    private UserRepository userRepos;
+    private UserService userService;
 
     public RefreshTokenService(RefreshTokenRepository refreshTokenRepos, JwtTokenProvider tokenProvider,
-            UserRepository userRepos) {
+            UserService userService) {
         this.refreshTokenRepos = refreshTokenRepos;
         this.tokenProvider = tokenProvider;
-        this.userRepos = userRepos;
+        this.userService = userService;
     }
 
     public RefreshToken generateRefreshToken(Long userId) {
-        Optional<User> user = userRepos.findById(userId);
+        Optional<User> user = userService.findById(userId);
         if (user.isPresent()) {
             RefreshToken refreshToken = new RefreshToken();
             String token = tokenProvider.generateRefreshToken(userId);
