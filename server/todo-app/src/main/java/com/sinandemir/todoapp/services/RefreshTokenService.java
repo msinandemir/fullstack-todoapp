@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.sinandemir.todoapp.entities.RefreshToken;
 import com.sinandemir.todoapp.entities.User;
+import com.sinandemir.todoapp.exceptions.ResourceNotFoundException;
 import com.sinandemir.todoapp.repositories.RefreshTokenRepository;
 import com.sinandemir.todoapp.security.JwtTokenProvider;
 
@@ -44,9 +45,11 @@ public class RefreshTokenService {
     }
 
     public void deleteRefreshTokenByRefreshToken(String refreshToken) {
-        Optional<RefreshToken> findRefreshToken = refreshTokenRepos.findByRefreshToken(refreshToken);
-        if (findRefreshToken.isPresent()) {
-            refreshTokenRepos.deleteById(findRefreshToken.get().getId());
-        }
+        RefreshToken findRefreshToken = refreshTokenRepos.findByRefreshToken(refreshToken).orElseThrow(
+            () -> new ResourceNotFoundException("refresh token not found with token -> " + refreshToken)
+        );
+
+        refreshTokenRepos.deleteById(findRefreshToken.getId());
+
     }
 }
