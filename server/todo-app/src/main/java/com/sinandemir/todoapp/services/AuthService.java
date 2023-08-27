@@ -20,6 +20,7 @@ import com.sinandemir.todoapp.dto.responses.UserRegisterResponse;
 import com.sinandemir.todoapp.entities.RefreshToken;
 import com.sinandemir.todoapp.entities.Role;
 import com.sinandemir.todoapp.entities.User;
+import com.sinandemir.todoapp.exceptions.ResourceNotFoundException;
 import com.sinandemir.todoapp.exceptions.TodoGlobalException;
 import com.sinandemir.todoapp.security.JwtTokenProvider;
 
@@ -81,30 +82,29 @@ public class AuthService {
 
         String token = jwtTokenProvider.generateToken(loginRequest.getUsernameOrEmail());
 
-        Optional<User> userOptional = userService.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(),
-                loginRequest.getUsernameOrEmail());
+        User user = userService.findByUsernameOrEmail(loginRequest.getUsernameOrEmail(),
+                loginRequest.getUsernameOrEmail())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "user not found with username or email ->" + loginRequest.getUsernameOrEmail()));
 
         String role = null;
         Long userId = null;
         UserLoginResponse loginResponse = new UserLoginResponse();
 
-        if (userOptional.isPresent()) {
-            User loggedInUser = userOptional.get();
-            userId = loggedInUser.getId();
-            RefreshToken refreshToken = refreshTokenService.getRefreshTokenByUserId(userId);
-            Optional<Role> roleOptional = loggedInUser.getRoles().stream().findFirst();
+        userId = user.getId();
+        RefreshToken refreshToken = refreshTokenService.getRefreshTokenByUserId(userId);
+        Optional<Role> roleOptional = user.getRoles().stream().findFirst();
 
-            if (refreshToken != null) {
-                loginResponse.setRefreshToken(refreshToken.getRefreshToken());
-            } else {
-                refreshToken = refreshTokenService.generateRefreshToken(userId);
-                loginResponse.setRefreshToken(refreshToken.getRefreshToken());
-            }
+        if (refreshToken != null) {
+            loginResponse.setRefreshToken(refreshToken.getRefreshToken());
+        } else {
+            refreshToken = refreshTokenService.generateRefreshToken(userId);
+            loginResponse.setRefreshToken(refreshToken.getRefreshToken());
+        }
 
-            if (roleOptional.isPresent()) {
-                Role userRole = roleOptional.get();
-                role = userRole.getName();
-            }
+        if (roleOptional.isPresent()) {
+            Role userRole = roleOptional.get();
+            role = userRole.getName();
         }
 
         loginResponse.setAccessToken(token);
