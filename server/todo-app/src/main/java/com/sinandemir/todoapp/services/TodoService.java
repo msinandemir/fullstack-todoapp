@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.sinandemir.todoapp.dto.requests.TodoRequest;
 import com.sinandemir.todoapp.dto.responses.TodoResponse;
@@ -42,6 +44,12 @@ public class TodoService {
         List<TodoResponse> mappedTodos = todos.stream().map((todo) -> modelMapper.map(todo, TodoResponse.class))
                 .collect(Collectors.toList());
         return mappedTodos;
+    }
+
+    public Page<TodoResponse> getAllTodosWithPagination(Pageable pageable) {
+        Page<Todo> todos = todoRepos.findAll(pageable);
+        Page<TodoResponse> mappedTodo = todos.map(todo -> modelMapper.map(todo, TodoResponse.class));
+        return mappedTodo;
     }
 
     public TodoResponse updateTodo(TodoRequest todoRequest, Long todoId) {

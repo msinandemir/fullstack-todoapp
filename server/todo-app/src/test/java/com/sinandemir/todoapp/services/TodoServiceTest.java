@@ -24,6 +24,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.sinandemir.todoapp.dto.requests.TodoRequest;
 import com.sinandemir.todoapp.dto.responses.TodoResponse;
@@ -69,7 +72,7 @@ public class TodoServiceTest {
 
     @Test
     @DisplayName("Test getTodo throws an exception")
-    void should_throw_exception_get_demo() {
+    void should_throw_exception_get_todo() {
         Long todoId = 0L;
 
         Mockito.when(todoRepos.findById(todoId)).thenReturn(Optional.empty());
@@ -79,6 +82,24 @@ public class TodoServiceTest {
         });
 
         assertEquals("todo not found with id -> " + todoId, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Test getAllTodosWithPagination")
+    void should_get_all_todos_with_pagination_return_todo_response_with_pageable() {
+        List<Todo> todos = new ArrayList<Todo>();
+        Todo todo1 = new Todo(0L, "someValue", "someValue", false);
+        Todo todo2 = new Todo(1L, "someValue", "someValue", false);
+        todos.add(todo1);
+        todos.add(todo2);
+
+        Page<Todo> todosWithPagination = new PageImpl<>(todos);
+
+        when(todoRepos.findAll(Pageable.unpaged())).thenReturn(todosWithPagination);
+
+        Page<TodoResponse> result = cut.getAllTodosWithPagination(Pageable.unpaged());
+
+        assertEquals(todos.size(), result.getContent().size());
     }
 
     @Test

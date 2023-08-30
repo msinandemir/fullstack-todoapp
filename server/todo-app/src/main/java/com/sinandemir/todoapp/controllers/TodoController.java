@@ -1,7 +1,7 @@
 package com.sinandemir.todoapp.controllers;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,9 +45,9 @@ public class TodoController {
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping
-    public ResponseEntity<List<TodoResponse>> getAllTodos() {
-        List<TodoResponse> todos = todoService.getAllTodos();
-        return new ResponseEntity<List<TodoResponse>>(todos, HttpStatus.OK);
+    public ResponseEntity<Page<TodoResponse>> getAllTodosWithPagination(Pageable pageable) {
+        Page<TodoResponse> todos = todoService.getAllTodosWithPagination(pageable);
+        return new ResponseEntity<Page<TodoResponse>>(todos, HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -59,14 +59,14 @@ public class TodoController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("{todoId}")
-    public ResponseEntity<String> deleteTodo(@PathVariable Long todoId){
+    public ResponseEntity<String> deleteTodo(@PathVariable Long todoId) {
         todoService.deleteTodo(todoId);
-        return new ResponseEntity<String>("todo deleted successfully.",HttpStatus.OK);
+        return new ResponseEntity<String>("todo deleted successfully.", HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PatchMapping("{todoId}")
-    public ResponseEntity<TodoResponse> changeCompletedStatus(@PathVariable Long todoId){
+    public ResponseEntity<TodoResponse> changeCompletedStatus(@PathVariable Long todoId) {
         TodoResponse todo = todoService.changeCompletedStatus(todoId);
         return new ResponseEntity<TodoResponse>(todo, HttpStatus.OK);
     }
